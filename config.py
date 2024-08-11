@@ -5,25 +5,14 @@ Configuration file for cryptocurrency portfolio tracker
 # API Configuration
 COINGECKO_API_URL = "https://api.coingecko.com/api/v3"
 
-# Portfolio configuration - Add your holdings here
+# Portfolio Configuration - Add your holdings here
 PORTFOLIO = {
-    "bitcoin": {
-        "symbol": "BTC",
-        "amount": 0.5,
-        "buy_price": 45000.00
-    },
-    "ethereum": {
-        "symbol": "ETH", 
-        "amount": 2.0,
-        "buy_price": 3200.00
-    },
-    "cardano": {
-        "symbol": "ADA",
-        "amount": 1000.0,
-        "buy_price": 1.20
-    }
+    "bitcoin": {"amount": 0.5, "purchase_price": 45000},
+    "ethereum": {"amount": 3.2, "purchase_price": 3200},
+    "cardano": {"amount": 1000, "purchase_price": 1.2},
+    "solana": {"amount": 5, "purchase_price": 150},
 }
 
-# Display configuration
+# Display Configuration
 CURRENCY = "usd"
 REFRESH_INTERVAL = 60  # seconds
