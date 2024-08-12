@@ -8,7 +8,7 @@ class CryptoAPI:
     def __init__(self):
         self.base_url = COINGECKO_API_URL
     
-    def get_current_prices(self, coin_ids):
+    def get_prices(self, coin_ids):
         """
         Fetch current prices for multiple cryptocurrencies
         """
@@ -30,16 +30,18 @@ class CryptoAPI:
         except requests.exceptions.RequestException as e:
             print(f"Error fetching prices: {e}")
             return {}
-    
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return {}
+
     def get_coin_list(self):
         """
-        Get list of supported cryptocurrencies
+        Get list of available cryptocurrencies (for validation)
         """
         try:
             url = f"{self.base_url}/coins/list"
             response = requests.get(url, timeout=10)
             response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching coin list: {e}")
-            return []
+            return {coin['id']: coin for coin in response.json()}
+        except:
+            return {}
