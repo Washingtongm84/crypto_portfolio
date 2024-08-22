@@ -1,56 +1,65 @@
 """
-Display module for portfolio visualization
+Display and formatting utilities
 """
+from colorama import Fore, Style, init
 import os
-import time
-from datetime import datetime
 
-class PortfolioDisplay:
+# Initialize colorama for cross-platform colored output
+init(autoreset=True)
+
+class Display:
     @staticmethod
     def clear_screen():
-        """Clear terminal screen"""
+        """Clear the terminal screen"""
         os.system('cls' if os.name == 'nt' else 'clear')
     
     @staticmethod
-    def display_portfolio(portfolio_data):
-        """
-        Display portfolio in a formatted table
-        """
+    def format_currency(amount):
+        """Format currency with proper formatting"""
+        return f"${amount:,.2f}"
+    
+    @staticmethod
+    def format_percentage(value):
+        """Format percentage with color based on value"""
+        color = Fore.GREEN if value >= 0 else Fore.RED
+        return f"{color}{value:+.2f}%{Style.RESET_ALL}"
+    
+    @staticmethod
+    def print_portfolio(portfolio_data):
+        """Display portfolio in a formatted table"""
         if not portfolio_data:
-            print("No portfolio data available")
             return
         
         holdings = portfolio_data['holdings']
         summary = portfolio_data['summary']
         
-        print("=" * 100)
-        print(f"CRYPTO PORTFOLIO TRACKER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("=" * 100)
-        print(f"{'Coin':<8} {'Amount':<12} {'Buy Price':<12} {'Current Price':<15} {'Invested':<12} {'Current Value':<15} {'P/L':<12} {'P/L %':<10}")
-        print("-" * 100)
+        print(f"\n{Fore.CYAN}{'='*80}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{'CRYPTOCURRENCY PORTFOLIO TRACKER':^80}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{'='*80}{Style.RESET_ALL}")
         
+        # Header
+        print(f"\n{Fore.YELLOW}{'Coin':<12} {'Amount':<12} {'Current Price':<15} {'Current Value':<15} {'P&L':<15} {'P&L %':<10}{Style.RESET_ALL}")
+        print("-" * 80)
+        
+        # Holdings
         for holding in holdings:
-            # Color coding for profit/loss
-            pl_color = "\033[92m" if holding['profit_loss'] >= 0 else "\033[91m"  # Green for profit, red for loss
-            reset_color = "\033[0m"
-            
-            print(f"{holding['symbol']:<8} "
-                  f"{holding['amount']:<12.4f} "
-                  f"${holding['buy_price']:<11.2f} "
-                  f"${holding['current_price']:<14.2f} "
-                  f"${holding['invested_value']:<11.2f} "
-                  f"${holding['current_value']:<14.2f} "
-                  f"{pl_color}${holding['profit_loss']:<11.2f}{reset_color} "
-                  f"{pl_color}{holding['profit_loss_percent']:<9.2f}%{reset_color}")
+            pl_color = Fore.GREEN if holding['profit_loss'] >= 0 else Fore.RED
+            print(
+                f"{holding['coin']:<12} "
+                f"{holding['amount']:<12.4f} "
+                f"{Display.format_currency(holding['current_price']):<15} "
+                f"{Display.format_currency(holding['current_value']):<15} "
+                f"{pl_color}{Display.format_currency(holding['profit_loss']):<15}{Style.RESET_ALL} "
+                f"{Display.format_percentage(holding['profit_loss_percent']):<10}"
+            )
         
-        print("-" * 100)
+        # Summary
+        print("-" * 80)
+        total_pl_color = Fore.GREEN if summary['total_profit_loss'] >= 0 else Fore.RED
+        print(f"\n{Fore.YELLOW}PORTFOLIO SUMMARY:{Style.RESET_ALL}")
+        print(f"Total Invested:    {Display.format_currency(summary['total_invested'])}")
+        print(f"Current Value:     {Display.format_currency(summary['total_current_value'])}")
+        print(f"Total Profit/Loss: {total_pl_color}{Display.format_currency(summary['total_profit_loss'])} "
+              f"({Display.format_percentage(summary['total_profit_loss_percent'])}){Style.RESET_ALL}")
         
-        # Summary with color coding
-        total_pl_color = "\033[92m" if summary['total_profit_loss'] >= 0 else "\033[91m"
-        
-        print(f"{'TOTAL':<8} {'':<12} {'':<12} {'':<15} "
-              f"${summary['total_invested']:<11.2f} "
-              f"${summary['total_current']:<14.2f} "
-              f"{total_pl_color}${summary['total_profit_loss']:<11.2f}\033[0m "
-              f"{total_pl_color}{summary['total_profit_loss_percent']:<9.2f}%\033[0m")
-        print("=" * 100)
+        print(f"\n{Fore.CYAN}{'='*80}{Style.RESET_ALL}")
