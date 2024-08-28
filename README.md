@@ -1,61 +1,54 @@
 ## Cryptocurrency Portfolio Tracker
 
-A simple Python script to track your cryptocurrency portfolio with real-time prices using the CoinGecko API.
+A simple Python script to track your cryptocurrency portfolio with real-time prices.
 
 ### Features
-- Real-time price updates
-- Portfolio performance tracking
-- Profit/loss calculations
-- Color-coded display
-- Auto-refresh functionality
+- Real-time price updates from CoinGecko API
+- Portfolio performance tracking (profit/loss)
+- Colored terminal display
+- Auto-refresh every 60 seconds
+- Support for multiple cryptocurrencies
 
 ### Setup Instructions
 
-1. **Install dependencies:**
+1. **Install Dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Configure your portfolio:**
-   Edit `config.py` to add your cryptocurrency holdings:
+2. **Configure Your Portfolio:**
+   Edit `config.py` and update the `PORTFOLIO` dictionary with your holdings:
    ```python
    PORTFOLIO = {
-       "bitcoin": {
-           "symbol": "BTC",
-           "amount": 0.5,        # Amount you own
-           "buy_price": 45000.00  # Your purchase price
-       },
-       # Add more coins...
+       "bitcoin": {"amount": 0.5, "purchase_price": 45000},
+       "ethereum": {"amount": 3.2, "purchase_price": 3200},
+       # Add more coins as needed
    }
    ```
 
-3. **Run the application:**
+3. **Run the Application:**
    ```bash
    python main.py
    ```
 
 ### Usage
-
-- The script will automatically fetch current prices and display your portfolio
-- Prices update every 60 seconds (configurable in `config.py`)
+- The application will automatically refresh every 60 seconds
 - Press `Ctrl+C` to exit the application
+- Green numbers indicate profit, red numbers indicate loss
 
-### Adding New Coins
+### Customization
+- Change refresh interval in `config.py` (REFRESH_INTERVAL)
+- Add/remove cryptocurrencies from your portfolio
+- Modify display colors in `display.py`
 
-To add new cryptocurrencies, use their CoinGecko ID in the `PORTFOLIO` configuration. You can find coin IDs at: https://api.coingecko.com/api/v3/coins/list
+### Supported Cryptocurrencies
+Use CoinGecko API coin IDs (e.g., "bitcoin", "ethereum", "cardano", "solana")
 
-### File Structure
-
-- `config.py` - Configuration and portfolio settings
-- `crypto_api.py` - API handler for CoinGecko
-- `portfolio_manager.py` - Portfolio calculations and management
-- `display.py` - Terminal display formatting
-- `main.py` - Main application entry point
-- `requirements.txt` - Python dependencies
+### Dependencies
+- `requests` - For API calls
+- `colorama` - For colored terminal output
 
 ### Notes
-
-- Free CoinGecko API has rate limits
-- Internet connection required for real-time prices
-- Prices are in USD by default (configurable)
-- Colors may not work on all terminals
+- Requires internet connection for real-time price updates
+- Free tier of CoinGecko API has rate limits
+- Data is for informational purposes only
