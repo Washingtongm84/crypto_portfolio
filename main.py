@@ -1,51 +1,40 @@
 """
-Main application file for cryptocurrency portfolio tracker
+Main entry point for the cryptocurrency portfolio tracker
 """
-import time
-import signal
-import sys
-from portfolio_manager import PortfolioManager
-from display import Display
-from config import REFRESH_INTERVAL
 
-class CryptoTracker:
-    def __init__(self):
-        self.portfolio_manager = PortfolioManager()
-        self.running = True
+import sys
+from portfolio_tracker import PortfolioTracker
+from portfolio import Portfolio
+
+def main():
+    if len(sys.argv) > 1:
+        # Command line interface for portfolio management
+        portfolio = Portfolio()
         
-        # Setup signal handler for graceful shutdown
-        signal.signal(signal.SIGINT, self.signal_handler)
-    
-    def signal_handler(self, signum, frame):
-        """Handle Ctrl+C gracefully"""
-        print(f"\n{Fore.YELLOW}Shutting down portfolio tracker...{Style.RESET_ALL}")
-        self.running = False
-        sys.exit(0)
-    
-    def run(self):
-        """Main application loop"""
-        print(f"{Fore.GREEN}Starting Cryptocurrency Portfolio Tracker...{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}Press Ctrl+C to exit{Style.RESET_ALL}")
-        
-        while self.running:
-            try:
-                Display.clear_screen()
-                
-                # Update and display portfolio
-                portfolio_data = self.portfolio_manager.update_portfolio()
-                if portfolio_data:
-                    Display.print_portfolio(portfolio_data)
-                
-                # Wait for next update
-                print(f"\n{Fore.CYAN}Next update in {REFRESH_INTERVAL} seconds...{Style.RESET_ALL}")
-                time.sleep(REFRESH_INTERVAL)
-                
-            except KeyboardInterrupt:
-                self.signal_handler(None, None)
-            except Exception as e:
-                print(f"{Fore.RED}Error: {e}{Style.RESET_ALL}")
-                time.sleep(REFRESH_INTERVAL)
+        if sys.argv[1] == "add" and len(sys.argv) == 5:
+            portfolio.add_holding(sys.argv[2], sys.argv[3], sys.argv[4])
+        elif sys.argv[1] == "remove" and len(sys.argv) == 3:
+            portfolio.remove_holding(sys.argv[2])
+        elif sys.argv[1] == "list":
+            holdings = portfolio.get_holdings()
+            print("Current portfolio:")
+            for crypto, data in holdings.items():
+                print(f"  {crypto}: {data['amount']} coins bought at ${data['buy_price']}")
+        else:
+            print_usage()
+    else:
+        # Start the real-time tracker
+        tracker = PortfolioTracker()
+        tracker.run_tracker()
+
+def print_usage():
+    print("Usage:")
+    print("  python main.py                    - Start real-time portfolio tracker")
+    print("  python main.py list               - Show current portfolio")
+    print("  python main.py add <crypto> <amount> <buy_price> - Add holding")
+    print("  python main.py remove <crypto>    - Remove holding")
+    print("\nSupported cryptocurrencies: bitcoin, ethereum, cardano, solana, ripple, dogecoin, polkadot, litecoin")
+    print("Example: python main.py add bitcoin 0.5 50000")
 
 if __name__ == "__main__":
-    tracker = CryptoTracker()
-    tracker.run()
+    main()
