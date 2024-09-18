@@ -1,54 +1,78 @@
-## Cryptocurrency Portfolio Tracker
+# Cryptocurrency Portfolio Tracker
 
-A simple Python script to track your cryptocurrency portfolio with real-time prices.
+A simple Python script to track your cryptocurrency portfolio value and performance with real-time prices.
 
-### Features
+## Features
+
 - Real-time price updates from CoinGecko API
 - Portfolio performance tracking (profit/loss)
-- Colored terminal display
-- Auto-refresh every 60 seconds
-- Support for multiple cryptocurrencies
+- Support for major cryptocurrencies
+- Configurable refresh interval
+- Portfolio management (add/remove holdings)
+- Color-coded profit/loss display
 
-### Setup Instructions
+## Installation
 
-1. **Install Dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. Ensure you have Python 3.6+ installed
+2. Install required dependencies:
+```bash
+pip install requests
+```
 
-2. **Configure Your Portfolio:**
-   Edit `config.py` and update the `PORTFOLIO` dictionary with your holdings:
-   ```python
-   PORTFOLIO = {
-       "bitcoin": {"amount": 0.5, "purchase_price": 45000},
-       "ethereum": {"amount": 3.2, "purchase_price": 3200},
-       # Add more coins as needed
-   }
-   ```
+## Usage
 
-3. **Run the Application:**
-   ```bash
-   python main.py
-   ```
+### Starting the Tracker
+```bash
+python main.py
+```
 
-### Usage
-- The application will automatically refresh every 60 seconds
-- Press `Ctrl+C` to exit the application
-- Green numbers indicate profit, red numbers indicate loss
+### Portfolio Management Commands
 
-### Customization
-- Change refresh interval in `config.py` (REFRESH_INTERVAL)
-- Add/remove cryptocurrencies from your portfolio
-- Modify display colors in `display.py`
+**View current portfolio:**
+```bash
+python main.py list
+```
+
+**Add a cryptocurrency holding:**
+```bash
+python main.py add bitcoin 0.5 45000
+```
+
+**Remove a cryptocurrency holding:**
+```bash
+python main.py remove bitcoin
+```
 
 ### Supported Cryptocurrencies
-Use CoinGecko API coin IDs (e.g., "bitcoin", "ethereum", "cardano", "solana")
+- bitcoin (BTC)
+- ethereum (ETH)
+- cardano (ADA)
+- solana (SOL)
+- ripple (XRP)
+- dogecoin (DOGE)
+- polkadot (DOT)
+- litecoin (LTC)
 
-### Dependencies
-- `requests` - For API calls
-- `colorama` - For colored terminal output
+## Configuration
 
-### Notes
-- Requires internet connection for real-time price updates
-- Free tier of CoinGecko API has rate limits
-- Data is for informational purposes only
+Edit `config.py` to customize:
+- `REFRESH_INTERVAL`: How often to update prices (in seconds)
+- `CURRENCY`: Display currency (usd, eur, etc.)
+- `SUPPORTED_CRYPTOS`: Add or remove supported cryptocurrencies
+
+## Portfolio Storage
+
+Your portfolio is stored in `portfolio.json`. You can manually edit this file or use the command-line interface.
+
+## Notes
+
+- The script uses the free CoinGecko API (no API key required)
+- Prices update every 60 seconds by default
+- Portfolio data is saved automatically
+- Colors may not display correctly on all terminals
+
+## Troubleshooting
+
+- Ensure you have an active internet connection
+- Check that the cryptocurrency ID matches exactly (lowercase)
+- Verify portfolio.json is not corrupted (delete it to reset to default)
