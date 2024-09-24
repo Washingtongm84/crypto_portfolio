@@ -2,27 +2,28 @@
 Cryptocurrency API handler for fetching real-time prices
 """
 import requests
-from config import COINGECKO_API_URL, CURRENCY
+from config import COINGECKO_API_URL, REQUEST_TIMEOUT, SUPPORTED_CRYPTOS, CURRENCY
 
 class CryptoAPI:
     def __init__(self):
         self.base_url = COINGECKO_API_URL
     
-    def get_prices(self, coin_ids):
+    def get_current_prices(self, coin_ids):
         """
         Fetch current prices for multiple cryptocurrencies
         """
         try:
-            # Convert list to comma-separated string
+            # Convert coin IDs to string for API call
             ids = ",".join(coin_ids)
             
             url = f"{self.base_url}/simple/price"
             params = {
                 'ids': ids,
-                'vs_currencies': CURRENCY
+                'vs_currencies': CURRENCY,
+                'include_24hr_change': 'true'
             }
             
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
             response.raise_for_status()
             
             return response.json()
@@ -30,18 +31,15 @@ class CryptoAPI:
         except requests.exceptions.RequestException as e:
             print(f"Error fetching prices: {e}")
             return {}
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            return {}
-
-    def get_coin_list(self):
+    
+    def get_coin_id(self, symbol):
         """
-        Get list of available cryptocurrencies (for validation)
+        Get CoinGecko coin ID from symbol
         """
-        try:
-            url = f"{self.base_url}/coins/list"
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()
-            return {coin['id']: coin for coin in response.json()}
-        except:
-            return {}
+        return SUPPORTED_CRYPTOS.get(symbol.lower())
+    
+    def get_supported_symbols(self):
+        """
+        Return list of supported cryptocurrency symbols
+        """
+        return list(SUPPORTED_CRYPTOS.keys())
