@@ -1,111 +1,109 @@
 """
 Main portfolio tracker application
 """
-
 import time
+import json
 import os
 from portfolio import Portfolio
-from price_fetcher import PriceFetcher
-from config import SUPPORTED_CRYPTOS, CURRENCY, REFRESH_INTERVAL
+from config import REFRESH_INTERVAL, CURRENCY
 
 class PortfolioTracker:
-    def __init__(self):
+    def __init__(self, portfolio_file="portfolio.json"):
         self.portfolio = Portfolio()
-        self.price_fetcher = PriceFetcher()
+        self.portfolio_file = portfolio_file
+        self.load_portfolio()
     
-    def calculate_performance(self, holdings, prices):
-        """Calculate portfolio performance metrics"""
-        total_invested = 0
-        total_current = 0
-        performance_data = {}
-        
-        for crypto_id, holding in holdings.items():
-            if crypto_id in prices:
-                current_price = prices[crypto_id][CURRENCY]
-                amount = holding['amount']
-                buy_price = holding['buy_price']
-                
-                invested = amount * buy_price
-                current_value = amount * current_price
-                profit_loss = current_value - invested
-                profit_loss_percent = (profit_loss / invested) * 100 if invested > 0 else 0
-                
-                total_invested += invested
-                total_current += current_value
-                
-                performance_data[crypto_id] = {
-                    'symbol': SUPPORTED_CRYPTOS.get(crypto_id, crypto_id.upper()),
-                    'amount': amount,
-                    'buy_price': buy_price,
-                    'current_price': current_price,
-                    'invested': invested,
-                    'current_value': current_value,
-                    'profit_loss': profit_loss,
-                    'profit_loss_percent': profit_loss_percent
-                }
-        
-        total_profit_loss = total_current - total_invested
-        total_profit_loss_percent = (total_profit_loss / total_invested) * 100 if total_invested > 0 else 0
-        
-        return {
-            'holdings': performance_data,
-            'summary': {
-                'total_invested': total_invested,
-                'total_current': total_current,
-                'total_profit_loss': total_profit_loss,
-                'total_profit_loss_percent': total_profit_loss_percent
-            }
-        }
+    def load_portfolio(self):
+        """
+        Load portfolio from JSON file
+        """
+        if os.path.exists(self.portfolio_file):
+            try:
+                with open(self.portfolio_file, 'r') as f:
+                    data = json.load(f)
+                    for holding in data.get('holdings', []):
+                        self.portfolio.add_holding(
+                            holding['symbol'],
+                            holding['amount'],
+                            holding.get('buy_price')
+                        )
+                print(f"Portfolio loaded from {self.portfolio_file}")
+            except Exception as e:
+                print(f"Error loading portfolio: {e}")
     
-    def display_portfolio(self, performance_data):
-        """Display portfolio in a formatted way"""
-        os.system('cls' if os.name == 'nt' else 'clear')
+    def save_portfolio(self):
+        """
+        Save portfolio to JSON file
+        """
+        try:
+            data = {'holdings': list(self.portfolio.holdings.values())}
+            with open(self.portfolio_file, 'w') as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"Error saving portfolio: {e}")
+    
+    def display_portfolio(self, portfolio_data):
+        """
+        Display portfolio in a formatted way
+        """
+        print("\n" + "="*80)
+        print(f"{'CRYPTO PORTFOLIO TRACKER':^80}")
+        print("="*80)
         
-        print("=" * 80)
-        print("CRYPTOCURRENCY PORTFOLIO TRACKER")
-        print("=" * 80)
-        print(f"{'Cryptocurrency':<15} {'Amount':<12} {'Avg Buy':<10} {'Current':<10} {'Invested':<12} {'Current Val':<12} {'P/L':<12} {'P/L %':<10}")
-        print("-" * 80)
+        print(f"\n{'Symbol':<8} {'Amount':<12} {'Current Price':<15} {'Value':<15} {'24h Change':<12} {'P/L':<15} {'P/L %':<10}")
+        print("-"*80)
         
-        for crypto_id, data in performance_data['holdings'].items():
-            color = '\033[92m' if data['profit_loss'] >= 0 else '\033[91m'  # Green for profit, red for loss
-            reset = '\033[0m'
+        for holding in portfolio_data['holdings']:
+            # Format values
+            amount = f"{holding['amount']:.6f}"
+            current_price = f"${holding['current_price']:.2f}"
+            value = f"${holding['value']:.2f}"
+            change_24h = f"{holding['24h_change']:.2f}%"
             
-            print(f"{data['symbol']:<15} {data['amount']:<12.4f} ${data['buy_price']:<9.2f} "
-                  f"${data['current_price']:<9.2f} ${data['invested']:<11.2f} "
-                  f"${data['current_value']:<11.2f} {color}${data['profit_loss']:<11.2f}{reset} "
-                  f"{color}{data['profit_loss_percent']:<9.1f}%{reset}")
+            # Format profit/loss
+            if holding['profit_loss'] is not None:
+                pl_sign = "+" if holding['profit_loss'] >= 0 else ""
+                pl = f"{pl_sign}${holding['profit_loss']:.2f}"
+                pl_percent = f"{pl_sign}{holding['profit_loss_percent']:.2f}%"
+            else:
+                pl = "N/A"
+                pl_percent = "N/A"
+            
+            print(f"{holding['symbol']:<8} {amount:<12} {current_price:<15} {value:<15} {change_24h:<12} {pl:<15} {pl_percent:<10}")
         
-        print("-" * 80)
+        # Display totals
+        print("-"*80)
+        print(f"{'TOTAL VALUE:':<20} ${portfolio_data['total_value']:.2f}")
         
-        summary = performance_data['summary']
-        color = '\033[92m' if summary['total_profit_loss'] >= 0 else '\033[91m'
-        reset = '\033[0m'
+        if portfolio_data['total_profit_loss'] is not None:
+            pl_sign = "+" if portfolio_data['total_profit_loss'] >= 0 else ""
+            print(f"{'TOTAL P/L:':<20} {pl_sign}${portfolio_data['total_profit_loss']:.2f}")
+            print(f"{'TOTAL P/L %:':<20} {pl_sign}{portfolio_data['total_profit_loss_percent']:.2f}%")
         
-        print(f"{'TOTAL':<15} {'':<12} {'':<10} {'':<10} ${summary['total_invested']:<11.2f} "
-              f"${summary['total_current']:<11.2f} {color}${summary['total_profit_loss']:<11.2f}{reset} "
-              f"{color}{summary['total_profit_loss_percent']:<9.1f}%{reset}")
-        print("=" * 80)
-        print(f"Last updated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-        print("Press Ctrl+C to exit")
+        print(f"{'Last Updated:':<20} {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        print("="*80)
     
     def run_tracker(self):
-        """Main tracking loop"""
-        print("Starting cryptocurrency portfolio tracker...")
-        print("Loading portfolio and fetching prices...")
+        """
+        Main tracking loop
+        """
+        print("Starting Cryptocurrency Portfolio Tracker...")
+        print("Press Ctrl+C to stop tracking")
         
         try:
             while True:
-                holdings = self.portfolio.get_holdings()
-                prices = self.price_fetcher.get_current_prices(list(holdings.keys()))
-                
-                if prices:
-                    performance_data = self.calculate_performance(holdings, prices)
-                    self.display_portfolio(performance_data)
+                # Get current prices
+                coin_ids = list(self.portfolio.holdings.keys())
+                if coin_ids:
+                    prices = self.portfolio.api.get_current_prices(coin_ids)
+                    portfolio_data = self.portfolio.calculate_portfolio_value(prices)
+                    self.display_portfolio(portfolio_data)
                 else:
-                    print("Error: Could not fetch price data")
+                    print("\nNo holdings in portfolio. Use the management script to add holdings.")
                 
+                print(f"\nRefreshing in {REFRESH_INTERVAL} seconds...")
                 time.sleep(REFRESH_INTERVAL)
                 
         except KeyboardInterrupt:
-            print("\n\nPortfolio tracker stopped. Goodbye!")
+            print("\n\nStopping portfolio tracker...")
+            self.save_portfolio()
