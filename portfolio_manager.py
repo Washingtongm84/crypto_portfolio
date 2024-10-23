@@ -1,96 +1,50 @@
 """
-Portfolio management script for adding/removing holdings
+Portfolio management and calculations
 """
-import json
-from portfolio import Portfolio
+from config import PORTFOLIO, CURRENCY
 
-def display_menu():
-    print("\n=== Portfolio Manager ===")
-    print("1. View current holdings")
-    print("2. Add holding")
-    print("3. Remove holding")
-    print("4. View supported cryptocurrencies")
-    print("5. Exit")
-    return input("Choose an option (1-5): ")
-
-def main():
-    portfolio = Portfolio()
+class PortfolioManager:
+    def __init__(self, portfolio_data):
+        self.portfolio = portfolio_data
     
-    # Try to load existing portfolio
-    try:
-        with open("portfolio.json", "r") as f:
-            data = json.load(f)
-            for holding in data.get('holdings', []):
-                portfolio.add_holding(
-                    holding['symbol'],
-                    holding['amount'],
-                    holding.get('buy_price')
-                )
-    except FileNotFoundError:
-        print("No existing portfolio found. Starting fresh.")
-    
-    while True:
-        choice = display_menu()
+    def calculate_portfolio_value(self, current_prices):
+        """
+        Calculate total portfolio value and individual coin performance
+        """
+        total_invested = 0
+        total_current = 0
+        coin_performance = {}
         
-        if choice == "1":
-            # View holdings
-            if portfolio.holdings:
-                print("\nCurrent Holdings:")
-                for coin_id, holding in portfolio.holdings.items():
-                    print(f"  {holding['symbol']}: {holding['amount']} coins")
-                    if holding['buy_price']:
-                        print(f"    Buy Price: ${holding['buy_price']:.2f}")
-            else:
-                print("\nNo holdings in portfolio.")
-        
-        elif choice == "2":
-            # Add holding
-            symbol = input("Enter cryptocurrency symbol (e.g., BTC): ").strip().lower()
-            amount = input("Enter amount: ").strip()
-            buy_price = input("Enter buy price (optional, press enter to skip): ").strip()
+        for coin_id, data in self.portfolio.items():
+            amount = data["amount"]
+            buy_price = data["buy_price"]
+            current_price = current_prices.get(coin_id, {}).get(CURRENCY, 0)
             
-            if not amount:
-                print("Amount is required!")
-                continue
+            invested_value = amount * buy_price
+            current_value = amount * current_price
             
-            try:
-                buy_price = float(buy_price) if buy_price else None
-                if portfolio.add_holding(symbol, amount, buy_price):
-                    print(f"Successfully added {amount} {symbol.upper()}")
-                    # Save portfolio
-                    data = {'holdings': list(portfolio.holdings.values())}
-                    with open("portfolio.json", "w") as f:
-                        json.dump(data, f, indent=2)
-                else:
-                    print("Failed to add holding.")
-            except ValueError:
-                print("Invalid amount or price format!")
+            total_invested += invested_value
+            total_current += current_value
+            
+            profit_loss = current_value - invested_value
+            profit_loss_percent = (profit_loss / invested_value) * 100 if invested_value > 0 else 0
+            
+            coin_performance[coin_id] = {
+                "amount": amount,
+                "buy_price": buy_price,
+                "current_price": current_price,
+                "invested_value": invested_value,
+                "current_value": current_value,
+                "profit_loss": profit_loss,
+                "profit_loss_percent": profit_loss_percent
+            }
         
-        elif choice == "3":
-            # Remove holding
-            symbol = input("Enter cryptocurrency symbol to remove: ").strip().lower()
-            if portfolio.remove_holding(symbol):
-                print(f"Removed {symbol.upper()} from portfolio")
-                # Save portfolio
-                data = {'holdings': list(portfolio.holdings.values())}
-                with open("portfolio.json", "w") as f:
-                    json.dump(data, f, indent=2)
-            else:
-                print(f"Holding {symbol.upper()} not found in portfolio")
+        portfolio_performance = {
+            "total_invested": total_invested,
+            "total_current": total_current,
+            "total_profit_loss": total_current - total_invested,
+            "total_profit_loss_percent": ((total_current - total_invested) / total_invested) * 100 if total_invested > 0 else 0,
+            "coin_performance": coin_performance
+        }
         
-        elif choice == "4":
-            # View supported cryptos
-            symbols = portfolio.api.get_supported_symbols()
-            print("\nSupported Cryptocurrencies:")
-            for i, symbol in enumerate(symbols, 1):
-                print(f"  {i}. {symbol.upper()}")
-        
-        elif choice == "5":
-            print("Goodbye!")
-            break
-        
-        else:
-            print("Invalid choice. Please try again.")
-
-if __name__ == "__main__":
-    main()
+        return portfolio_performance
